@@ -1,6 +1,8 @@
+require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
+const path = require('path');
 const Message = require('./models/Message');
 
 const app = express();
@@ -8,6 +10,9 @@ const app = express();
 // Middleware
 app.use(express.json());
 app.use(cors());
+
+// Serve static files from the current directory
+app.use(express.static(__dirname));
 
 // MongoDB Connection
 const MONGODB_URI = process.env.MONGODB_URI;
@@ -21,20 +26,8 @@ if (!MONGODB_URI) {
 }
 
 // Routes
-app.get('/api/status', (req, res) => {
-    res.json({
-        status: 'online',
-        mongodb: MONGODB_URI ? 'configured' : 'missing',
-        time: new Date().toISOString(),
-        environment: 'Zero-Config'
-    });
-});
-
 app.post('/api/messages', async (req, res) => {
     try {
-        if (!MONGODB_URI) {
-            return res.status(500).json({ success: false, error: 'Database not configured on server' });
-        }
         const { name, email, message } = req.body;
         
         if (!name || !email || !message) {
@@ -56,9 +49,9 @@ app.post('/api/messages', async (req, res) => {
     }
 });
 
+// Admin route to view all messages
 app.get('/api/view-messages', async (req, res) => {
     try {
-        if (!MONGODB_URI) throw new Error('Database not configured');
         const messages = await Message.find().sort({ createdAt: -1 });
         res.json({ success: true, count: messages.length, messages });
     } catch (error) {
@@ -67,5 +60,12 @@ app.get('/api/view-messages', async (req, res) => {
     }
 });
 
-// For Vercel, we export the app
-module.exports = app;
+// Serve index.html for any other route (SPA supporting)
+app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, 'index.html'));
+});
+
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => {
+    console.log(`🚀 Server running on http://localhost:${PORT}`);
+});
