@@ -1,8 +1,6 @@
-require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
-const path = require('path');
 const Message = require('./models/Message');
 
 const app = express();
@@ -10,9 +8,6 @@ const app = express();
 // Middleware
 app.use(express.json());
 app.use(cors());
-
-// Serve static files from the public directory
-app.use(express.static(path.join(__dirname, 'public')));
 
 // MongoDB Connection
 const MONGODB_URI = process.env.MONGODB_URI;
@@ -30,7 +25,8 @@ app.get('/api/status', (req, res) => {
     res.json({
         status: 'online',
         mongodb: MONGODB_URI ? 'configured' : 'missing',
-        time: new Date().toISOString()
+        time: new Date().toISOString(),
+        environment: 'Zero-Config'
     });
 });
 
@@ -60,7 +56,6 @@ app.post('/api/messages', async (req, res) => {
     }
 });
 
-// Admin route to view all messages
 app.get('/api/view-messages', async (req, res) => {
     try {
         if (!MONGODB_URI) throw new Error('Database not configured');
@@ -72,18 +67,5 @@ app.get('/api/view-messages', async (req, res) => {
     }
 });
 
-// Handle all other routes by serving index.html
-app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
-
-// ONLY start the server if running locally (not on Vercel)
-if (process.env.NODE_ENV !== 'production') {
-    const PORT = process.env.PORT || 5000;
-    app.listen(PORT, () => {
-        console.log(`🚀 Local Server running on http://localhost:${PORT}`);
-    });
-}
-
+// For Vercel, we export the app
 module.exports = app;
-
