@@ -16,15 +16,29 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // MongoDB Connection
 const MONGODB_URI = process.env.MONGODB_URI;
-if (MONGODB_URI) {
+
+if (!MONGODB_URI) {
+    console.error('❌ MONGODB_URI is not defined in environment variables.');
+} else {
     mongoose.connect(MONGODB_URI)
         .then(() => console.log('✅ Connected to MongoDB'))
         .catch(err => console.error('❌ MongoDB Connection Error:', err));
 }
 
 // Routes
+app.get('/api/status', (req, res) => {
+    res.json({
+        status: 'online',
+        mongodb: MONGODB_URI ? 'configured' : 'missing',
+        time: new Date().toISOString()
+    });
+});
+
 app.post('/api/messages', async (req, res) => {
     try {
+        if (!MONGODB_URI) {
+            return res.status(500).json({ success: false, error: 'Database not configured on server' });
+        }
         const { name, email, message } = req.body;
         
         if (!name || !email || !message) {
@@ -49,6 +63,7 @@ app.post('/api/messages', async (req, res) => {
 // Admin route to view all messages
 app.get('/api/view-messages', async (req, res) => {
     try {
+        if (!MONGODB_URI) throw new Error('Database not configured');
         const messages = await Message.find().sort({ createdAt: -1 });
         res.json({ success: true, count: messages.length, messages });
     } catch (error) {
@@ -62,9 +77,13 @@ app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-    console.log(`🚀 Server running on http://localhost:${PORT}`);
-});
+// ONLY start the server if running locally (not on Vercel)
+if (process.env.NODE_ENV !== 'production') {
+    const PORT = process.env.PORT || 5000;
+    app.listen(PORT, () => {
+        console.log(`🚀 Local Server running on http://localhost:${PORT}`);
+    });
+}
 
 module.exports = app;
+
