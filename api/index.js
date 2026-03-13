@@ -20,6 +20,15 @@ if (MONGODB_URI) {
         .catch(err => console.error('❌ MongoDB Connection Error:', err));
 }
 
+// Health check route
+app.get('/api/health', (req, res) => {
+    res.json({ 
+        status: 'ok', 
+        mongodb: mongoose.connection.readyState === 1 ? 'connected' : 'connecting/disconnected',
+        time: new Date().toISOString()
+    });
+});
+
 // Routes
 app.post('/api/messages', async (req, res) => {
     try {
