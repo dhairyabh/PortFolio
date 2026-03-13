@@ -3,7 +3,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const path = require('path');
-const Message = require('../models/Message');
+const Message = require('./models/Message');
 
 const app = express();
 
@@ -11,28 +11,19 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
+// Serve static files from the current directory
+app.use(express.static(__dirname));
+
 // MongoDB Connection
 const MONGODB_URI = process.env.MONGODB_URI;
 
-if (MONGODB_URI) {
+if (!MONGODB_URI) {
+    console.error('❌ MONGODB_URI is not defined in environment variables.');
+} else {
     mongoose.connect(MONGODB_URI)
         .then(() => console.log('✅ Connected to MongoDB'))
         .catch(err => console.error('❌ MongoDB Connection Error:', err));
 }
-
-// Added this route to verify deployment
-app.get('/api/messages', (req, res) => {
-    res.json({ message: "Vercel API is alive and running messages.js", time: new Date() });
-});
-
-// Health check route
-app.get('/api/health', (req, res) => {
-    res.json({ 
-        status: 'ok', 
-        mongodb: mongoose.connection.readyState === 1 ? 'connected' : 'connecting/disconnected',
-        time: new Date().toISOString()
-    });
-});
 
 // Routes
 app.post('/api/messages', async (req, res) => {
@@ -58,6 +49,7 @@ app.post('/api/messages', async (req, res) => {
     }
 });
 
+// Admin route to view all messages
 app.get('/api/view-messages', async (req, res) => {
     try {
         const messages = await Message.find().sort({ createdAt: -1 });
@@ -68,5 +60,12 @@ app.get('/api/view-messages', async (req, res) => {
     }
 });
 
-// For Vercel, we export the app
-module.exports = app;
+// Serve index.html for any other route (SPA supporting)
+app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, 'index.html'));
+});
+
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => {
+    console.log(`🚀 Server running on http://localhost:${PORT}`);
+});
