@@ -61,7 +61,7 @@ app.get('/api/view-messages', async (req, res) => {
 });
 
 // Serve index.html for any other route (SPA supporting)
-app.get('*', (req, res) => {
+app.get('(.*)', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
 
