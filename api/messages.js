@@ -20,6 +20,11 @@ if (MONGODB_URI) {
         .catch(err => console.error('❌ MongoDB Connection Error:', err));
 }
 
+// Added this route to verify deployment
+app.get('/api/messages', (req, res) => {
+    res.json({ message: "Vercel API is alive and running messages.js", time: new Date() });
+});
+
 // Health check route
 app.get('/api/health', (req, res) => {
     res.json({ 
