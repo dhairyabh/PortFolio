@@ -11,11 +11,16 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
+// Serve static files from the public directory
+app.use(express.static(path.join(__dirname, 'public')));
+
 // MongoDB Connection
 const MONGODB_URI = process.env.MONGODB_URI;
-mongoose.connect(MONGODB_URI)
-    .then(() => console.log('✅ Connected to MongoDB'))
-    .catch(err => console.error('❌ MongoDB Connection Error:', err));
+if (MONGODB_URI) {
+    mongoose.connect(MONGODB_URI)
+        .then(() => console.log('✅ Connected to MongoDB'))
+        .catch(err => console.error('❌ MongoDB Connection Error:', err));
+}
 
 // Routes
 app.post('/api/messages', async (req, res) => {
@@ -52,10 +57,14 @@ app.get('/api/view-messages', async (req, res) => {
     }
 });
 
-// Simple health check
-app.get('/api/health', (req, res) => {
-    res.send('Portfolio Backend is running...');
+// Handle all other routes by serving index.html
+app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => {
+    console.log(`🚀 Server running on http://localhost:${PORT}`);
 });
 
 module.exports = app;
-
