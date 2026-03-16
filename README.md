@@ -1,6 +1,6 @@
 # Portfolio - Dhairya Bhatnagar
 
-**Live Demo**: [https://glittering-sunshine-0211c6.netlify.app/](https://glittering-sunshine-0211c6.netlify.app/)
+**Live Demo**: [https://portfolio-23s0.onrender.com/](https://portfolio-23s0.onrender.com/)
 
 A modern, high-performance personal portfolio website showcasing web development projects and skills. Features a stunning interactive UI and a robust MongoDB-backed messaging system.
 
